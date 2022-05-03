@@ -33,10 +33,12 @@ func MakeScraper(interval, maxpage int, logger *log.Logger) *Scraper {
 // Start runs the scraper in blocking mode
 // returns error if failed to initialize
 func (sc *Scraper) Start() error {
+	var snap *Snapshot
 	sc.Logger.Println("Scraper Started")
 	for range sc.Schedule.C {
 		sc.Logger.Println("Scraping...")
-		sc.scrapeAll()
+		snap = sc.scrapeAll()
+		sc.Logger.Printf("Completed scraping: %d players scraped", len(snap.Players))
 	}
 	return nil
 }
@@ -72,10 +74,12 @@ func (sc *Scraper) scrapePage(client *http.Client, idx int) (*Page, error) {
 }
 
 // scrapeAll gets results from the leaderboards
-func (sc *Scraper) scrapeAll() {
+func (sc *Scraper) scrapeAll() *Snapshot {
 	var errors int
-	var pages = make([]*Page, 0)
-
+	var snap = &Snapshot{
+		Timestamp: time.Now().Unix(),
+		Players:   make(map[int]*Datapoint),
+	}
 	jar, _ := cookiejar.New(nil)
 	client := &http.Client{Jar: jar, Timeout: time.Second * 15}
 	for i := 1; i <= sc.MaxPage; i++ {
@@ -85,10 +89,12 @@ func (sc *Scraper) scrapeAll() {
 			sc.Logger.Printf("error scraping page %d: %s", i, err)
 			if errors >= 3 {
 				sc.Logger.Printf("error limit reached, aborting scrape...")
-				return
+				return nil
 			}
 		}
-		pages = append(pages, page)
+		for _, dp := range page.Data {
+			snap.Players[dp.Id] = dp
+		}
 	}
-	sc.Logger.Printf("Scrape completed, %d pages downloaded", len(pages))
+	return snap
 }
