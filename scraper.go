@@ -16,17 +16,19 @@ const (
 )
 
 type Scraper struct {
-	MaxPage  int
-	Schedule *time.Ticker
-	Logger   *log.Logger
+	MaxPage   int
+	Schedule  *time.Ticker
+	DBHandler *Database
+	Logger    *log.Logger
 }
 
-func MakeScraper(interval, maxpage int, logger *log.Logger) *Scraper {
+func MakeScraper(interval, maxpage int, db *Database, logger *log.Logger) *Scraper {
 	duration := time.Duration(interval) * time.Second
 	return &Scraper{
-		MaxPage:  maxpage,
-		Schedule: time.NewTicker(duration),
-		Logger:   logger,
+		MaxPage:   maxpage,
+		Schedule:  time.NewTicker(duration),
+		Logger:    logger,
+		DBHandler: db,
 	}
 }
 

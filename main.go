@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -9,7 +10,9 @@ import (
 
 func main() {
 	logger := log.Default()
-	scraper := MakeScraper(120, 1, logger)
+	db, _ := MakeDatabase("./phoenix.db", logger)
+	scraper := MakeScraper(120, 1, db, logger)
+	fmt.Println(db.Names)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
