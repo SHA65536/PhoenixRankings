@@ -10,7 +10,7 @@ import (
 func main() {
 	logger := log.Default()
 	db, _ := MakeDatabase("./phoenix.db", logger)
-	scraper := MakeScraper(120, 2, db, logger)
+	scraper := MakeScraper(600, 500, db, logger)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

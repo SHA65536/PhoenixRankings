@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	_ "embed"
 
@@ -82,6 +83,7 @@ func (db *Database) InitializeDB() error {
 func (db *Database) SaveSnapshot(snap *Snapshot) {
 	var changes int
 	db.Logger.Println("[Database] Saving snapshot to database")
+	start := time.Now()
 	for _, data := range snap.Players {
 		if db.comparePoint(data) {
 			changes++
@@ -91,7 +93,8 @@ func (db *Database) SaveSnapshot(snap *Snapshot) {
 		}
 	}
 	db.increaseSnap(snap)
-	db.Logger.Printf("[Database] Snapshot saved. New points: %d", changes)
+	elapsed := time.Since(start)
+	db.Logger.Printf("[Database] Snapshot saved. New points: %d | Took: %s", changes, elapsed)
 }
 
 // comparePoint checks if the given datapoint

@@ -41,8 +41,10 @@ func (sc *Scraper) Start() error {
 	sc.DBHandler.GetSnapshots(snap)
 	for range sc.Schedule.C {
 		sc.Logger.Println("[Scraper] Scraping...")
+		start := time.Now()
 		snap = sc.scrapeAll()
-		sc.Logger.Printf("[Scraper] Completed scraping: %d players scraped", len(snap.Players))
+		elapsed := time.Since(start)
+		sc.Logger.Printf("[Scraper] Completed scraping: %d players scraped. Took: %s", len(snap.Players), elapsed)
 		sc.DBHandler.SaveSnapshot(snap)
 	}
 	return nil
