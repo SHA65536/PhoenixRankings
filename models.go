@@ -1,5 +1,7 @@
 package main
 
+import "encoding/json"
+
 type Page struct {
 	Success bool         `json:"success"`
 	Prev    int          `json:"prev"`
@@ -13,12 +15,24 @@ type Datapoint struct {
 	DBId        int
 	Id          int    `json:"id"`
 	Name        string `json:"name"`
+	Rank        int
 	Level       int    `json:"level"`
 	Exp         int    `json:"exp"`
 	Fame        int    `json:"fame"`
 	Job         int    `json:"job"`
 	Image       string `json:"image"`
 	Restriction int    `json:"restriction_flag"`
+}
+
+func (p *Page) Parse(data []byte) error {
+	err := json.Unmarshal(data, &p)
+	if err != nil {
+		return err
+	}
+	for idx, player := range p.Data {
+		player.Rank = ((p.Current - 1) * 5) + idx + 1
+	}
+	return err
 }
 
 type Snapshot struct {
