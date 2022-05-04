@@ -1,6 +1,24 @@
 package main
 
-import "encoding/json"
+import (
+	_ "embed"
+	"encoding/json"
+)
+
+//go:embed queries/create_tables.sql
+var query_create_tables string
+
+//go:embed queries/create_indexes.sql
+var query_create_indexes string
+
+//go:embed queries/get_last_two.sql
+var query_get_last_two string
+
+//go:embed queries/create_point.sql
+var query_create_point string
+
+//go:embed queries/update_point.sql
+var query_update_point string
 
 type Page struct {
 	Success bool         `json:"success"`
@@ -12,7 +30,7 @@ type Page struct {
 }
 
 type Datapoint struct {
-	DBId        int
+	DBId        int64
 	Id          int    `json:"id"`
 	Name        string `json:"name"`
 	Rank        int

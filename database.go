@@ -9,15 +9,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-//go:embed queries/create_tables.sql
-var create_tables string
-
-//go:embed queries/create_indexes.sql
-var create_indexes string
-
-//go:embed queries/get_last_two.sql
-var get_last_two string
-
 type Database struct {
 	DB          *sql.DB
 	CurrentSnap *Snapshot
@@ -45,7 +36,7 @@ func (db *Database) GetSnapshots(reference *Snapshot) {
 	db.LastSnap = &Snapshot{Players: make(map[int]*Datapoint)}
 	for id := range reference.Players {
 		point = &Datapoint{}
-		rows, err := db.DB.Query(get_last_two, id)
+		rows, err := db.DB.Query(query_get_last_two, id)
 		if err != nil {
 			continue
 		}
@@ -75,11 +66,11 @@ func (db *Database) GetSnapshots(reference *Snapshot) {
 // gets names map
 func (db *Database) InitializeDB() error {
 	var err error
-	_, err = db.DB.Exec(create_tables)
+	_, err = db.DB.Exec(query_create_tables)
 	if err != nil {
 		return err
 	}
-	_, err = db.DB.Exec(create_indexes)
+	_, err = db.DB.Exec(query_create_indexes)
 	if err != nil {
 		return err
 	}
@@ -134,12 +125,24 @@ func (db *Database) comparePoint(data *Datapoint) bool {
 
 // createPoint creates a new data point in the database
 func (db *Database) createPoint(data *Datapoint, timestamp int64) {
-	//TODO: Update rowid
+	res, err := db.DB.Exec(query_create_point,
+		timestamp, data.Id, data.Name, data.Rank,
+		data.Level, data.Exp, data.Fame, data.Job,
+		data.Image, data.Restriction)
+	if err != nil {
+		db.Logger.Fatal(err)
+	}
+	data.DBId, err = res.LastInsertId()
 }
 
 // updatePoint updates the timestamp of a datapoint
 func (db *Database) updatePoint(data *Datapoint, timestamp int64) {
-	//TODO: Update rowid
+	dbid := db.CurrentSnap.Players[data.Id].DBId
+	_, err := db.DB.Exec(query_update_point, timestamp, dbid)
+	if err != nil {
+		db.Logger.Fatal(err)
+	}
+	data.DBId = dbid
 }
 
 // increaseSnap updates the order of internal snapshots
