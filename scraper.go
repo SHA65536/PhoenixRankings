@@ -70,7 +70,7 @@ func (sc *Scraper) scrapePage(client *http.Client, idx int) (*Page, error) {
 		return nil, err
 	}
 	responseData, err := ioutil.ReadAll(response.Body)
-	defer response.Body.Close()
+	response.Body.Close()
 	if err != nil {
 		return nil, err
 	}
@@ -90,9 +90,9 @@ func (sc *Scraper) scrapeAll() *Snapshot {
 	}
 	jar, _ := cookiejar.New(nil)
 	client := &http.Client{Jar: jar, Timeout: time.Second * 15}
-	defer client.CloseIdleConnections()
 	for i := 1; i <= sc.MaxPage; i++ {
 		page, err := sc.scrapePage(client, i)
+		client.CloseIdleConnections()
 		if err != nil {
 			errors++
 			sc.Logger.Printf("[Scraper] Error scraping page %d: %s", i, err)
