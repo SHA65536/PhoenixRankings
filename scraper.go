@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/http/cookiejar"
 	"time"
 )
 
@@ -56,10 +55,13 @@ func (sc *Scraper) Stop() {
 }
 
 // scrapePage gets information about 1 page
-func (sc *Scraper) scrapePage(client *http.Client, idx int) (*Page, error) {
+func (sc *Scraper) scrapePage(idx int) (*Page, error) {
 	var page *Page = &Page{}
-
-	req, _ := http.NewRequest("GET", fmt.Sprintf(URL, idx), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf(URL, idx), nil)
+	if err != nil {
+		return nil, err
+	}
+	client := http.Client{Timeout: 15 * time.Second}
 	req.Header = http.Header{
 		"User-Agent":   []string{"SHABot/0.1.0"},
 		"Content-Type": []string{"application/json"},
@@ -88,11 +90,8 @@ func (sc *Scraper) scrapeAll() *Snapshot {
 		Timestamp: time.Now().Unix(),
 		Players:   make(map[int]*Datapoint),
 	}
-	jar, _ := cookiejar.New(nil)
-	client := &http.Client{Jar: jar, Timeout: time.Second * 15}
 	for i := 1; i <= sc.MaxPage; i++ {
-		page, err := sc.scrapePage(client, i)
-		client.CloseIdleConnections()
+		page, err := sc.scrapePage(i)
 		if err != nil {
 			errors++
 			sc.Logger.Printf("[Scraper] Error scraping page %d: %s", i, err)

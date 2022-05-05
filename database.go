@@ -57,6 +57,7 @@ func (db *Database) GetSnapshots(reference *Snapshot) {
 			&point.Rank, &point.Level, &point.Exp, &point.Fame,
 			&point.Job, &point.Image, &point.Restriction,
 		)
+		rows.Close()
 		db.LastSnap.Players[id] = point
 	}
 	db.Logger.Printf("[Database] Fetched snapshots. Current: %d, Last: %d",
